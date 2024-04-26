@@ -1,0 +1,24 @@
+{% extends 'base.html'%}
+
+{% block content %}
+        <a href="{% url 'home:home' %}" class="btn btn-outline-dark">Back</a><br><br>
+        
+        <div class="card" style="padding: 10px;">
+            <p><h6>User=> <a href="{% url 'home:user_profile' user.id %}" class="card-body">
+                    {{ posts.user }} </a>
+
+            {% if request.user.id == posts.user.id %}
+                    <a href="{% url 'home:post_delete' posts.id %}" class="btn btn-outline-danger">Delete</a></p>
+            {% endif %}
+                <hr>
+
+            <h4>PostBody:</h4>
+            <p class="card-body"> <em>{{ posts.user }}</em> 
+                <br>body: {{posts.body}} <br>date: {{posts.updated|date:'Y-M' }}<br><hr>
+
+                {% if request.user.id == posts.user.id %}
+                <a href="{% url 'home:post_update' posts.id %}" class="btn btn-outline-success">Update</a><br>
+                <a href="{% url 'home:post_create' %}" class="btn btn-outline-primary">Create New Post</a>
+                {% endif %}</p>
+        </div>
+{% endblock %}

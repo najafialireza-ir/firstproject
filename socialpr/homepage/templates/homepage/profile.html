@@ -2,17 +2,29 @@
 
 
 {% block content %}
-    <a href="{% url 'home:home' %}" class="btn btn-outline-dark">Back</a>
-    
+    <a href="{% url 'home:home' %}" class="btn btn-outline-dark">Back</a><br><br>
+
+
+    {% if request.user.id != user.id and not is_following %}
+        <a class="btn btn-warning" href="{% url 'home:user_follow' user.id %}">Follow</a>
+      
+    {% elif request.user.id != user.id and is_following %}
+        <a class="btn btn-warning" href="{% url 'home:user_unfollow' user.id %}">Unfollow</a>
+      
+    {% endif %}
+
+
+ 
     <em><h2 class="text-center">{{ user.username }}</h2>
+
+
     {% if posts %}
-    
         <h2>Your Post:</h2>
         <div class="card">
         {% for post in posts%}
             <a href="{{ post.get_absolute_url }}" class="card-body" style="padding: 10px;">
                 {{ post.body }}</a>
-    {% endfor %}
+        {% endfor %}
     {%else%}
             <h4 style="padding: 20px;">You don`t have any post!</h4>
     {% endif %}
@@ -24,3 +36,4 @@
     {% endif %}
 
 {% endblock %}
+

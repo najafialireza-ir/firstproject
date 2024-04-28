@@ -3,9 +3,11 @@
 {% block content %}
         <a href="{% url 'home:home' %}" class="btn btn-outline-dark">Back</a><br><br>
         
+        
         <div class="card" style="padding: 10px;">
-            <p><h6>User=> <a href="{% url 'home:user_profile' user.id %}" class="card-body">
+            <p><h6>User=> <a href="{% url 'home:user_profile' posts.user.id %}" class="card-body">
                     {{ posts.user }} </a>
+
 
             {% if request.user.id == posts.user.id %}
                     <a href="{% url 'home:post_delete' posts.id %}" class="btn btn-outline-danger">Delete</a></p>
@@ -13,12 +15,47 @@
                 <hr>
 
             <h4>PostBody:</h4>
-            <p class="card-body"> <em>{{ posts.user }}</em> 
+            <p class="card-body"> <em> {{ posts.user }}</em> 
                 <br>body: {{posts.body}} <br>date: {{posts.updated|date:'Y-M' }}<br><hr>
 
                 {% if request.user.id == posts.user.id %}
                 <a href="{% url 'home:post_update' posts.id %}" class="btn btn-outline-success">Update</a><br>
                 <a href="{% url 'home:post_create' %}" class="btn btn-outline-primary">Create New Post</a>
                 {% endif %}</p>
+
+                
+                {% if request.user.is_authenticated %}
+                        <form action="" method="post">
+                                {% csrf_token %}
+                                {{ form.as_p }}
+                                <input type="submit" value="Send">
+                        </form>
+                {% else %}
+                        <p>only logged in users</p>
+                {% endif %}
+
+
+                <h6>Comments: {{ comments.count }}</h6>
+                {% for comment in comments %}
+                        <div class="card bg-dark text-white">
+                                <p class="card-body">{{ comment.user }} <br> {{ comment.created|timesince }}</p>
+                                <p class="card-body">comment : {{ comment.body }}</p>
+                               
+                                
+                        </div><br>
+                        {% with replies=comment.rcomment.all%}
+                        {% for reply in replies %}
+                                <p class="bg-primary p-3 m-2">
+                                        {{ reply.created|timesince }}
+                                        {{ reply.user }}
+                                        {{ reply.body }}
+                                </p>
+                        {% endfor %}
+                        {% endwith %}
+                {% empty %}
+                        <h4>No Comment Yet!</h4>
+               
+                {% endfor %}
         </div>
+
 {% endblock %}

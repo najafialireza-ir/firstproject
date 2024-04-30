@@ -8,7 +8,7 @@ from .forms import PostForm, CommentForm, CommentReplyForm, SearchPostForm
 from django.utils.text import slugify
 from django.contrib.auth.decorators import login_required
 from django.utils. decorators import method_decorator
-
+from django.db.models import Q
 
 
 class HomeView(View):
@@ -17,7 +17,7 @@ class HomeView(View):
     def get(self, request):
         post = PostModel.objects.all()
         if request.GET.get('search'):
-            post = post.filter(body__icontains=request.GET['search'])
+            post = post.filter(Q(body__icontains=request.GET['search']) | Q(id__icontains=request.GET['search']))
             
         return render(request, 'homepage/home.html', {'posts':post, 'form':self.form_class})
 

@@ -16,3 +16,13 @@ class CommentForm(forms.ModelForm):
         widgets = {
             'body': forms.TextInput(attrs={'class':'form-control'})
         }
+        
+        
+class CommentReplyForm(forms.ModelForm):
+    class Meta:
+        model = Comments
+        fields = ('body', )
+        
+
+class SearchPostForm(forms.Form):
+    search = forms.CharField()

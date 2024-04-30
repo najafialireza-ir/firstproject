@@ -1,12 +1,12 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-
+from .models import Profile
 
 
 class UserRegisterForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput(attrs={'placeholder':'Your Name'}))
-    email = forms.EmailField(widget=forms.PasswordInput(attrs={'placeholder':'@gmail.com'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder':'@gmail.com'}))
     password1 = forms.CharField(label='password', widget=forms.PasswordInput())
     password2 = forms.CharField(label='confirm', widget=forms.PasswordInput())
 
@@ -36,3 +36,10 @@ class UserRegisterForm(forms.Form):
 class UserLoginForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput({'placeholder':'YourName'}))
     password = forms.CharField(widget=forms.PasswordInput({'placeholder':'8-Char'}))
+    
+    
+class EditUserForm(forms.ModelForm):
+    email = forms.EmailField()
+    class Meta:
+        model = Profile
+        fields = ('age', 'bio')

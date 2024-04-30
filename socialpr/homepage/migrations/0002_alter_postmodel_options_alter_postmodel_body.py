@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='postmodel',
             name='body',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(),
         ),
     ]

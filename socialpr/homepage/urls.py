@@ -11,6 +11,8 @@ urlpatterns = [
     path('update/<int:post_id>/', views.PostUpdateView.as_view(), name='post_update'),
     path('create/', views.PostCreateView.as_view(), name='post_create'),
     path('follow/<int:user_id>/', views.UserFollowView.as_view(), name='user_follow'),
-    path('unfollow/<int:user_id>', views.UserUnfollowView.as_view(), name='user_unfollow'),
+    path('unfollow/<int:user_id>/', views.UserUnfollowView.as_view(), name='user_unfollow'),
+    path('reply/<int:post_id>/<int:comment_id>/', views.NestedCommentReply.as_view(), name='nested_reply'),
+    path('like/<int:post_id>/', views.PostLikeView.as_view(), name='post_like')
     
 ]

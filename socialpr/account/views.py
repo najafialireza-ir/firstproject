@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.views import View
-from .form import UserRegisterForm, UserLoginForm
+from .form import UserRegisterForm, UserLoginForm, EditUserForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -99,3 +99,22 @@ class UserPasswordResetConfirmView(auth_view.PasswordResetConfirmView):
 class UserPasswordResetCompleteView(auth_view.PasswordResetCompleteView):
     template_name = 'account/password_reset_complete.html'
 
+
+class EditUserView(LoginRequiredMixin, View):
+    form_class = EditUserForm
+    
+    def get(self, request):
+        form = self.form_class(instance=request.user.profile, initial={'email':request.user.email})
+        return render(request, 'account/edit_profile.html', {'form':form})
+    
+    
+    def post(self, request):
+        form = self.form_class(request.POST, instance=request.user.profile)
+        if form.is_valid():
+            form.save()
+            request.user.email = form.cleaned_data['email']
+            request.user.save()
+            messages.success(request, 'Your Profile Changed Successfully.', 'success')
+            return redirect('home:user_profile', request.user.id)
+        messages.error(request, 'Please Fill In The Fields!', 'error')
+        return render(request, 'account/edit_profile.html ', {'form':form})

@@ -5,7 +5,7 @@ from django.urls import reverse
 
 class PostModel(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='puser') # conection one to many
-    body = models.TextField(null=True, blank=True)
+    body = models.TextField()
     slug = models.SlugField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)    
@@ -26,6 +26,15 @@ class PostModel(models.Model):
         this method send url name and args.
         """
         return reverse('home:post_detail', args=(self.id,))
+    
+    def like_post(self):
+        return self.pvote.count()
+    
+    def user_can_like(self, user):
+        user_like = user.uvote.filter(post=self)
+        if user_like.exists():
+            return True # user liked this post
+        return False  # user doesn`t like psot          
     
     
     
@@ -48,3 +57,14 @@ class Comments(models.Model):
     
     def __str__(self):
         return f'{self.body}-{self.created}'
+    
+    
+    
+class Vote(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uvote')
+    post = models.ForeignKey(PostModel, on_delete=models.CASCADE, related_name='pvote')
+    
+    
+    def __str__(self):
+        return f'{self.user} liked {self.post.slug}'
+    

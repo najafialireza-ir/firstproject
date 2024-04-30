@@ -2,9 +2,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from .models import PostModel, Relation
+from .models import PostModel, Relation, Comments, Vote
 from django.contrib import messages
-from .forms import PostForm, CommentForm
+from .forms import PostForm, CommentForm, CommentReplyForm, SearchPostForm
 from django.utils.text import slugify
 from django.contrib.auth.decorators import login_required
 from django.utils. decorators import method_decorator
@@ -12,9 +12,14 @@ from django.utils. decorators import method_decorator
 
 
 class HomeView(View):
+    form_class = SearchPostForm
+    
     def get(self, request):
         post = PostModel.objects.all()
-        return render(request, 'homepage/home.html', {'posts':post})
+        if request.GET.get('search'):
+            post = post.filter(body__icontains=request.GET['search'])
+            
+        return render(request, 'homepage/home.html', {'posts':post, 'form':self.form_class})
 
 
 
@@ -34,6 +39,7 @@ class UserProfileView(LoginRequiredMixin, View):
     
 class UserPostDetailView(LoginRequiredMixin, View):
     form_class = CommentForm
+    form_reply = CommentReplyForm
     
     
     def setup(self, request, *args, **kwargs):
@@ -43,8 +49,15 @@ class UserPostDetailView(LoginRequiredMixin, View):
     
     def get(self, request, *args, **kwargs):
         comment = self.post_instance.pcomment.filter(is_reply=False)
-        return render(request, 'homepage/detail.html', {'posts':self.post_instance, 'comments':comment,
-                                                        'form':self.form_class})
+        can_like = False
+        if request.user.is_authenticated and self.post_instance.user_can_like(request.user):
+            can_like = True # user liked already if true 
+            
+        return render(request, 'homepage/detail.html', 
+                      {'posts':self.post_instance, 'comments':comment,
+                            'form':self.form_class, 'reply_form':self.form_reply,
+                            'can_like':can_like})
+    
     
     @method_decorator(login_required)
     def post(self, request, post_id):
@@ -66,7 +79,7 @@ class PostDeleteView(LoginRequiredMixin, View):
             post.delete()
             messages.success(request, 'Your Post Deleted Successfully.', 'success')
         else:
-            messages.error(request, "You can`t Deleted this message")
+            messages.error(request, "You can`t Deleted this message", 'error')
         return redirect('home:home')
     
     
@@ -119,6 +132,8 @@ class PostCreateView(LoginRequiredMixin, View):
             new_post.save()
             messages.success(request, 'Your New Post created', 'success')
             return redirect('home:post_detail', new_post.id)
+
+        messages.error(request, 'Fields can`t be empty! ', 'error')
         return render(request, 'homepage/create.html', {'form':form})
         
         
@@ -148,3 +163,35 @@ class UserUnfollowView(LoginRequiredMixin, View):
         return redirect('home:user_profile', user.id)
     
     
+class NestedCommentReply(LoginRequiredMixin, View):
+    form_class = CommentReplyForm
+    
+    def post(self, request, post_id, comment_id):
+        post =  get_object_or_404(PostModel, pk=post_id)
+        comment = get_object_or_404(Comments, pk=comment_id)
+        form = self.form_class(request.POST)
+        
+        if form.is_valid():
+            reply = form.save(commit=False)
+            reply.user = request.user
+            reply.post = post
+            reply.reply = comment
+            reply.is_reply = True
+            reply.save()
+            messages.success(request, 'Your reply submitted successfully.', 'success')
+        return redirect('home:post_detail', post.id)
+    
+
+class PostLikeView(LoginRequiredMixin, View):
+    
+    def get(self, request, post_id):
+        post = get_object_or_404(PostModel, pk=post_id)
+        like = Vote.objects.filter(post=post, user=request.user)
+        
+        if like.exists():
+            messages.error(request, 'You Already Liked This Post', 'danger')
+            
+        else:
+            Vote.objects.create(post=post, user=request.user)
+            messages.success(request, 'Like This Post Successfully.', 'success')
+        return redirect('home:post_detail', post.id)
